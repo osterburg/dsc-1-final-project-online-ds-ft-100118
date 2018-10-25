@@ -1,4 +1,17 @@
+# Your code here - remember to use markdown cells for comments as well!
+import math
+import pandas as pd
+import numpy as np
+from scipy import stats
 import statsmodels.api as sm
+import matplotlib.pyplot as plt
+
+import seaborn as sns
+sns.set_style('whitegrid')
+sns.set_context("notebook", font_scale=1.5, rc={"lines.linewidth": 2.5})
+
+import folium
+
 
 def stepwise_selection(X, y,
                        initial_list=[],
@@ -60,3 +73,144 @@ def stepwise_selection(X, y,
             break
 
     return included
+
+
+def display_heatmap(data):
+    """
+    Display a heatmap from a given dataset
+    :param data: dataset
+    :return: g (graph to display)
+    """
+
+    # Set the style of the visualization
+    # sns.set(style = "white")
+    sns.set_style("white")
+
+    # Create a covariance matrix
+    corr = data.corr()
+
+    # Generate a mask the size of our covariance matrix
+    mask = np.zeros_like(corr)
+    mask[np.triu_indices_from(mask)] = None
+
+    # Set up the matplotlib figure
+    f, ax = plt.subplots(figsize=(15, 12))
+
+    # Generate a custom diverging colormap
+    cmap = sns.diverging_palette(240, 10, sep=20, n=9, as_cmap=True)
+
+    # Draw the heatmap with the mask and correct aspect ratio
+    # sns.heatmap(corr, cmap=cmap)
+    g = sns.heatmap(corr, cmap=cmap, square=True)
+
+    return g
+
+
+def display_jointplot(data, columns):
+    """
+    Display seaborn jointplot on given dataset and feature list
+    :param data: dataset
+    :param columns: feature list
+    :return: g
+    """
+
+    sns.set_style('whitegrid')
+
+    for column in columns:
+        g = sns.jointplot(x=column, y="price", data=data, dropna=True,
+                          kind='reg', joint_kws={'line_kws': {'color': 'red'}})
+
+    return g
+
+
+def display_plot(data, vars, target, plot_type='box'):
+    """
+    Generates a seaborn boxplot (default) or scatterplot or relplot
+    :param data: dataset
+    :param vars: feature list
+    :param target: feature name
+    :param plot_type: box (default), scatter, rel
+    :return: g
+    """
+
+    # pick one dimension
+    ncol = 3
+    # make sure enough subplots
+    nrow = math.floor((len(vars) + ncol - 1) / ncol)
+    # create the axes
+    fig, axarr = plt.subplots(nrows=nrow, ncols=ncol, figsize=(20, 20))
+
+    # go over a linear list of data
+    for i in range(len(vars)):
+        # compute an appropriate index (1d or 2d)
+        ix = np.unravel_index(i, axarr.shape)
+
+        feature_name = vars[i]
+
+        if plot_type == 'box':
+            g = sns.boxplot(y=feature_name, x=target, data=data, width=0.8,
+                            orient='h', showmeans=True, fliersize=3, ax=axarr[ix])
+
+        elif plot_type == 'scatter':
+            g = sns.scatterplot(x=feature_name, y=target, data=data, ax=axarr[ix])
+
+        else:
+            col_name = col[i]
+            g = sns.relplot(x=feature_name, y=target, hue=target, col=col_name,
+                            size=target, sizes=(5, 500), col_wrap=3, data=data)
+
+    return g
+
+
+def show_zipcode_map(col):
+    """
+    Generates a folium map of Seattle
+    :param col: feature to display
+    :return: m
+    """
+
+    # read updated geo data
+    king_geo = "cleaned_geodata.json"
+
+    # Initialize Folium Map with Seattle latitude and longitude
+    m = folium.Map(location=[47.35, -121.9], zoom_start=9,
+                   detect_retina=True, control_scale=False)
+
+    # Create choropleth map
+    m.choropleth(
+        geo_data=king_geo,
+        name='choropleth',
+        data=zipcode_data,
+        # col: feature of interest
+        columns=['zipcode', col],
+        key_on='feature.properties.ZIPCODE',
+        fill_color='OrRd',
+        fill_opacity=0.7,
+        line_opacity=0.2,
+        legend_name=col
+    )
+
+    folium.LayerControl().add_to(m)
+
+    # Save map based on feature of interest
+    m.save(col + '.html')
+
+    return m
+
+
+def measure_strength(data, feature_list, target):
+    """
+    Calculate a Spearman rank-order correlation coefficient and the p-value to test for non-correlation.
+
+    :param data: dataset
+    :param vars: feature list
+    :param target: feature name
+    :return:
+    """
+
+    print("Rank-order correlation coefficient R and p-value")
+
+    for k, v in enumerate(feature_list):
+        r, p = stats.spearmanr(data[v], data[target])
+        print("{0} <=> {1}\t\tR = {2} and p = {3}".format(target, v, r, p))
+
