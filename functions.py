@@ -11,6 +11,8 @@ sns.set_style('whitegrid')
 sns.set_context("notebook", font_scale=1.5, rc={"lines.linewidth": 2.5})
 
 import folium
+from folium.plugins import HeatMap
+
 
 
 def stepwise_selection(X, y,
@@ -78,6 +80,7 @@ def stepwise_selection(X, y,
 def display_heatmap(data):
     """
     Display a heatmap from a given dataset
+    
     :param data: dataset
     :return: g (graph to display)
     """
@@ -100,8 +103,7 @@ def display_heatmap(data):
     cmap = sns.diverging_palette(240, 10, sep=20, n=9, as_cmap=True)
 
     # Draw the heatmap with the mask and correct aspect ratio
-    # sns.heatmap(corr, cmap=cmap)
-    g = sns.heatmap(corr, cmap=cmap, square=True)
+    g = sns.heatmap(corr, cmap=cmap, mask=mask, square=True)
 
     return g
 
@@ -109,6 +111,7 @@ def display_heatmap(data):
 def display_jointplot(data, columns):
     """
     Display seaborn jointplot on given dataset and feature list
+
     :param data: dataset
     :param columns: feature list
     :return: g
@@ -125,7 +128,8 @@ def display_jointplot(data, columns):
 
 def display_plot(data, vars, target, plot_type='box'):
     """
-    Generates a seaborn boxplot (default) or scatterplot or relplot
+    Generates a seaborn boxplot (default) or scatterplot
+
     :param data: dataset
     :param vars: feature list
     :param target: feature name
@@ -151,20 +155,22 @@ def display_plot(data, vars, target, plot_type='box'):
             g = sns.boxplot(y=feature_name, x=target, data=data, width=0.8,
                             orient='h', showmeans=True, fliersize=3, ax=axarr[ix])
 
-        elif plot_type == 'scatter':
+        # elif plot_type == 'scatter':
+        else:
             g = sns.scatterplot(x=feature_name, y=target, data=data, ax=axarr[ix])
 
-        else:
-            col_name = col[i]
-            g = sns.relplot(x=feature_name, y=target, hue=target, col=col_name,
-                            size=target, sizes=(5, 500), col_wrap=3, data=data)
+        # else:
+        #     col_name = vars[i]
+        #     g = sns.relplot(x=feature_name, y=target, hue=target, col=col_name,
+        #                     size=target, sizes=(5, 500), col_wrap=3, data=data)
 
     return g
 
 
-def show_zipcode_map(col):
+def map_feature_by_zipcode(zipcode_data, col):
     """
     Generates a folium map of Seattle
+    :param zipcode_data: zipcode dataset
     :param col: feature to display
     :return: m
     """
@@ -173,8 +179,7 @@ def show_zipcode_map(col):
     king_geo = "cleaned_geodata.json"
 
     # Initialize Folium Map with Seattle latitude and longitude
-    m = folium.Map(location=[47.35, -121.9], zoom_start=9,
-                   detect_retina=True, control_scale=False)
+    m = folium.Map(location=[47.35, -121.9], zoom_start=9,  detect_retina=True, control_scale=False)
 
     # Create choropleth map
     m.choropleth(
@@ -200,10 +205,10 @@ def show_zipcode_map(col):
 
 def measure_strength(data, feature_list, target):
     """
-    Calculate a Spearman rank-order correlation coefficient and the p-value to test for non-correlation.
+    Calculate a Pearson correlation coefficient and the p-value to test for non-correlation.
 
     :param data: dataset
-    :param vars: feature list
+    :param feature_list: feature list
     :param target: feature name
     :return:
     """
@@ -211,6 +216,37 @@ def measure_strength(data, feature_list, target):
     print("Rank-order correlation coefficient R and p-value")
 
     for k, v in enumerate(feature_list):
-        r, p = stats.spearmanr(data[v], data[target])
-        print("{0} <=> {1}\t\tR = {2} and p = {3}".format(target, v, r, p))
+        r, p = stats.pearsonr(data[v], data[target])
+        print("{0} <=> {1}\t\tR = {2} \t\t p = {3}".format(target, v, r, p))
+
+
+def heatmap_features_by_loc(data, feature):
+    """
+    Generates a heatmap based on lat, long and a feature
+
+    :param data: dataset
+    :param feature: feature name
+    :return:
+    """
+    max_value = data[feature].max()
+
+    lat = np.array(data.lat, dtype=pd.Series)
+    lon = np.array(data.long, dtype=pd.Series)
+    mag = np.array(data.[feature], dtype=pd.Series) / max_value
+
+    d = np.dstack((lat, lon, mag))[0]
+    heatmap_data = [i for i in d.tolist()]
+
+    hmap = folium.Map(location=[47.55, -122.0], zoom_start=10, tiles='stamentoner')
+
+    hm_wide = HeatMap(heatmap_data,
+                      min_opacity=0.7,
+                      max_val=mg.max(),
+                      radius=2, blur=2,
+                      max_zoom=1,
+                      )
+
+    hmap.add_child(hm_wide)
+
+    return hmap
 
