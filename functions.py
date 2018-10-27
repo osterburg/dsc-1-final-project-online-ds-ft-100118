@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 from scipy import stats
 import statsmodels.api as sm
+from statsmodels.formula.api import ols
 import matplotlib.pyplot as plt
 
 import seaborn as sns
@@ -80,7 +81,7 @@ def stepwise_selection(X, y,
 def display_heatmap(data):
     """
     Display a heatmap from a given dataset
-    
+
     :param data: dataset
     :return: g (graph to display)
     """
@@ -192,7 +193,7 @@ def map_feature_by_zipcode(zipcode_data, col):
         fill_color='OrRd',
         fill_opacity=0.7,
         line_opacity=0.2,
-        legend_name=col
+        legend_name='house ' + col
     )
 
     folium.LayerControl().add_to(m)
@@ -232,7 +233,7 @@ def heatmap_features_by_loc(data, feature):
 
     lat = np.array(data.lat, dtype=pd.Series)
     lon = np.array(data.long, dtype=pd.Series)
-    mag = np.array(data.[feature], dtype=pd.Series) / max_value
+    mag = np.array(data[feature], dtype=pd.Series) / max_value
 
     d = np.dstack((lat, lon, mag))[0]
     heatmap_data = [i for i in d.tolist()]
@@ -241,7 +242,7 @@ def heatmap_features_by_loc(data, feature):
 
     hm_wide = HeatMap(heatmap_data,
                       min_opacity=0.7,
-                      max_val=mg.max(),
+                      max_val=max_value,
                       radius=2, blur=2,
                       max_zoom=1,
                       )
@@ -249,4 +250,3 @@ def heatmap_features_by_loc(data, feature):
     hmap.add_child(hm_wide)
 
     return hmap
-
