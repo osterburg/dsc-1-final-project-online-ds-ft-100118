@@ -15,15 +15,10 @@ import folium
 from folium.plugins import HeatMap
 
 
+def stepwise_selection(X, y, initial_list=[], threshold_in=0.01, threshold_out = 0.05, verbose=True):
+    """
+    Perform a forward-backward feature selection based on p-value from statsmodels.api.OLS
 
-def stepwise_selection(X, y,
-                       initial_list=[],
-                       threshold_in=0.01,
-                       threshold_out = 0.05,
-                       verbose=True):
-
-    """ Perform a forward-backward feature selection
-    based on p-value from statsmodels.api.OLS
     Arguments:
         X - pandas.DataFrame with candidate features
         y - list-like with the target
@@ -32,6 +27,7 @@ def stepwise_selection(X, y,
         threshold_out - exclude a feature if its p-value > threshold_out
         verbose - whether to print the sequence of inclusions and exclusions
     Returns: list of selected features
+
     Always set threshold_in < threshold_out to avoid infinite looping.
     See https://en.wikipedia.org/wiki/Stepwise_regression for the details
     """
@@ -214,7 +210,7 @@ def measure_strength(data, feature_list, target):
     :return:
     """
 
-    print("Rank-order correlation coefficient R and p-value")
+    print("Pearson correlation coefficient R and p-value \n\n")
 
     for k, v in enumerate(feature_list):
         r, p = stats.pearsonr(data[v], data[target])
