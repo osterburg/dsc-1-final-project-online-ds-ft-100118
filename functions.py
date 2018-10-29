@@ -176,7 +176,9 @@ def map_feature_by_zipcode(zipcode_data, col):
     king_geo = "cleaned_geodata.json"
 
     # Initialize Folium Map with Seattle latitude and longitude
-    m = folium.Map(location=[47.35, -121.9], zoom_start=9,  detect_retina=True, control_scale=False)
+    m = folium.Map(location=[47.35, -121.9], zoom_start=9,
+                   detect_retina=True, control_scale=False)
+                   # tiles='stamentoner')
 
     # Create choropleth map
     m.choropleth(
@@ -187,7 +189,7 @@ def map_feature_by_zipcode(zipcode_data, col):
         columns=['zipcode', col],
         key_on='feature.properties.ZIPCODE',
         fill_color='OrRd',
-        fill_opacity=0.7,
+        fill_opacity=0.9,
         line_opacity=0.2,
         legend_name='house ' + col
     )
