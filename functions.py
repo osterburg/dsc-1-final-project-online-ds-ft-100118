@@ -2,20 +2,23 @@
 import math
 import pandas as pd
 import numpy as np
+
 from scipy import stats
+
 import statsmodels.api as sm
 from statsmodels.formula.api import ols
+
 import matplotlib.pyplot as plt
+
+import folium
+from folium.plugins import HeatMap
 
 import seaborn as sns
 sns.set_style('whitegrid')
 sns.set_context("notebook", font_scale=1.5, rc={"lines.linewidth": 2.5})
 
-import folium
-from folium.plugins import HeatMap
 
-
-def stepwise_selection(X, y, initial_list=[], threshold_in=0.01, threshold_out = 0.05, verbose=True):
+def stepwise_selection(X, y, initial_list=[], threshold_in=0.01, threshold_out=0.05, verbose=True):
     """
     Perform a forward-backward feature selection based on p-value from statsmodels.api.OLS
 
@@ -34,13 +37,13 @@ def stepwise_selection(X, y, initial_list=[], threshold_in=0.01, threshold_out =
 
     included = list(initial_list)
     while True:
-        changed=False
+        changed = False
         # forward step
-        excluded = list(set(X.columns)-set(included))
+        excluded = list(set(X.columns) - set(included))
         new_pval = pd.Series(index=excluded)
 
         for new_column in excluded:
-            model = sm.OLS(y, sm.add_constant(pd.DataFrame(X[included+[new_column]]))).fit()
+            model = sm.OLS(y, sm.add_constant(pd.DataFrame(X[included + [new_column]]))).fit()
             new_pval[new_column] = model.pvalues[new_column]
 
         best_pval = new_pval.min()
@@ -48,7 +51,7 @@ def stepwise_selection(X, y, initial_list=[], threshold_in=0.01, threshold_out =
         if best_pval < threshold_in:
             best_feature = new_pval.idxmin()
             included.append(best_feature)
-            changed=True
+            changed = True
 
             if verbose:
                 print('Add  {:30} with p-value {:.6}'.format(best_feature, best_pval))
@@ -62,7 +65,7 @@ def stepwise_selection(X, y, initial_list=[], threshold_in=0.01, threshold_out =
         worst_pval = pvalues.max()
 
         if worst_pval > threshold_out:
-            changed=True
+            changed = True
             worst_feature = pvalues.argmax()
             included.remove(worst_feature)
 
@@ -178,7 +181,7 @@ def map_feature_by_zipcode(zipcode_data, col):
     # Initialize Folium Map with Seattle latitude and longitude
     m = folium.Map(location=[47.35, -121.9], zoom_start=9,
                    detect_retina=True, control_scale=False)
-                   # tiles='stamentoner')
+    # tiles='stamentoner')
 
     # Create choropleth map
     m.choropleth(
