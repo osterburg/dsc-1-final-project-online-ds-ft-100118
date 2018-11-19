@@ -244,7 +244,7 @@ def heatmap_features_by_loc(data, feature):
     hm_wide = HeatMap(heatmap_data,
                       min_opacity=0.7,
                       max_val=max_value,
-                      radius=2, blur=2,
+                      radius=1, blur=1,
                       max_zoom=1,
                       )
 
